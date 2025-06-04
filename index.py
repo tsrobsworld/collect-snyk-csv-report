@@ -19,6 +19,14 @@ def snyk_export_status_check(group_id, export_id, region):
     retry_count = 0
     while not export_report_completed:
         try:
+            # Check if export_status is a string (error message) or a dictionary
+            if isinstance(export_status, str):
+                print(f"Error getting export status: {export_status}")
+                sleep(30)
+                retry_count += 1
+                export_status = get_snyk_export_status(group_id, export_id, region)
+                continue
+                
             if export_status['data']['attributes']['status'] == 'FINISHED':
                 print(f"Export {export_id} for group {group_id} is finished.  Downloading report url link...")
                 return True
@@ -33,7 +41,7 @@ def snyk_export_status_check(group_id, export_id, region):
             sleep(30)
             retry_count += 1
         if retry_count > 10:
-                    print(f"Error checking export status: {e}.  Exiting...")
+                    print(f"Error checking export status: Maximum retries exceeded.  Exiting...")
                     return False
                 
 def get_snyk_report(group_id, introduced_from, introduced_to, region):
